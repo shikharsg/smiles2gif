@@ -1,0 +1,38 @@
+---
+services:
+  ts-smiles2gif:
+    image: tailscale/tailscale:latest
+    container_name: ts-smiles2gif
+    hostname: smiles2gif
+    environment:
+      - TS_AUTHKEY=${TS_AUTHKEY}
+        # - TS_EXTRA_ARGS=--advertise-tags=tag:container
+      - TS_SERVE_CONFIG=/config/smiles2gif.json
+      - TS_STATE_DIR=/var/lib/tailscale
+    volumes:
+      - ${PWD}/ts-smiles2gif/state:/var/lib/tailscale
+      - ${PWD}/ts-smiles2gif/config:/config
+      - /dev/net/tun:/dev/net/tun
+    cap_add:
+      - net_admin
+      - sys_module
+    restart: unless-stopped
+  smiles2gif:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: smiles2gif
+    container_name: smiles2gif
+    network_mode: service:ts-smiles2gif
+    depends_on:
+      - ts-smiles2gif
+    volumes:
+      - smiles2gif-data:/app/data/
+    restart: unless-stopped
+
+volumes:
+  smiles2gif-data:
+    driver: local
+  ts-smiles2gif:
+    driver: local
+
